@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>McToken · Status</title>
+<meta name="description" content="Live status for the $TOKE / McToken ecosystem — website, explorer, data pipeline, API, and liquidity.">
+<link rel="icon" type="image/png" href="https://mctoken.xyz/moonman.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0c10;--panel:#13161d;--panel2:#181c24;--line:#242a33;--line2:#2e3540;
+    --txt:#e7eaef;--mut:#8b94a3;--mut2:#5b6472;--blue:#5aa2ff;
+    --ok:#34d399;--warn:#e7b84a;--down:#ff6b6b;
+    --display:'Space Grotesk',sans-serif;--sans:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box}html,body{margin:0}
+  body{background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.5}
+  a{color:var(--blue);text-decoration:none}
+  .wrap{max-width:860px;margin:0 auto;padding:0 22px 80px}
+  header{border-bottom:1px solid var(--line);background:rgba(10,12,16,.9);position:sticky;top:0;z-index:10;backdrop-filter:blur(8px)}
+  .hbar{max-width:860px;margin:0 auto;padding:15px 22px;display:flex;align-items:center;gap:11px}
+  .mark{width:30px;height:30px;border-radius:8px;object-fit:cover;background:var(--panel2)}
+  .brand{font-family:var(--display);font-weight:700;font-size:17px}
+  .brand .s{color:var(--mut);font-weight:400}
+  .navsp{flex:1}.navlink{font-size:13px;color:var(--mut)}
+  .hero{padding:44px 0 26px;text-align:center}
+  .bigdot{width:58px;height:58px;border-radius:50%;margin:0 auto 18px;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:24px}
+  .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(25px,4.5vw,36px);letter-spacing:-.8px;margin:0}
+  .hero .when{color:var(--mut);font-size:12px;margin-top:10px;font-family:var(--mono)}
+  .seclab{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:1.6px;color:var(--mut2);margin:28px 0 10px}
+  .seg{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:15px 17px;margin-bottom:10px}
+  .seg-top{display:flex;align-items:center;gap:12px}
+  .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+  .seg-name{font-family:var(--display);font-weight:600;font-size:15px}
+  .seg-detail{font-size:12.5px;color:var(--mut);margin-top:2px;font-family:var(--mono)}
+  .pill{margin-left:auto;font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;padding:4px 10px;border-radius:999px;white-space:nowrap}
+  .ok .dot{background:var(--ok)}.ok .pill{color:var(--ok);background:rgba(52,211,153,.12)}
+  .warn .dot{background:var(--warn)}.warn .pill{color:var(--warn);background:rgba(231,184,74,.12)}
+  .down .dot{background:var(--down)}.down .pill{color:var(--down);background:rgba(255,107,107,.12)}
+  .idle .dot{background:var(--mut2)}.idle .pill{color:var(--mut);background:var(--panel2)}
+  .ok.bigdot{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);color:var(--ok)}
+  .warn.bigdot{background:rgba(231,184,74,.12);border-color:rgba(231,184,74,.4);color:var(--warn)}
+  .down.bigdot{background:rgba(255,107,107,.12);border-color:rgba(255,107,107,.4);color:var(--down)}
+  .uptime{display:flex;gap:2px;margin-top:13px;height:22px}
+  .uptime i{flex:1;border-radius:2px;background:var(--ok);opacity:.85}
+  .uptime i.warn{background:var(--warn)}.uptime i.down{background:var(--down)}.uptime i.n{background:var(--line2);opacity:.5}
+  .uprow{display:flex;justify-content:space-between;font-size:10px;color:var(--mut2);font-family:var(--mono);margin-top:6px}
+  .foot{margin-top:34px;border-top:1px solid var(--line);padding-top:16px;font-size:11.5px;color:var(--mut2)}
+  @media(max-width:560px){.uptime i:nth-child(n+46){display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hbar">
+    <img class="mark" src="https://mctoken.xyz/moonman.png" alt="">
+    <span class="brand">McToken <span class="s">· Status</span></span>
+    <span class="navsp"></span>
+    <a class="navlink" href="https://mctoken.xyz">mctoken.xyz ↗</a>
+  </div>
+</header>
+<div class="wrap">
+  <div class="hero">
+    <div class="bigdot idle" id="bigdot">●</div>
+    <h1 id="headline">Checking systems…</h1>
+    <div class="when" id="when">live</div>
+  </div>
+  <div class="seclab">Ecosystem</div>
+  <div id="segs"></div>
+  <div class="foot">Live checks against the public TOKE API + on-chain reconciliation, recorded daily. Informational only — not financial advice.</div>
+</div>
+<script>
+const STATE={ok:{l:'Operational',c:'ok'},warn:{l:'Degraded',c:'warn'},down:{l:'Outage',c:'down'},idle:{l:'Checking',c:'idle'}};
+const NAMES={site:'Website',explorer:'Explorer',pipeline:'Data pipeline',onchain:'On-chain integrity',api:'TOKE API',liquidity:'Liquidity'};
+const ORDER=['site','explorer','pipeline','onchain','api','liquidity'];
+
+function uptime(segKey,history){
+  const days=90, ticks=new Array(days).fill('n');
+  const recent=history.slice(-days);
+  const offset=days-recent.length;
+  recent.forEach((d,i)=>{ const st=d.s&&d.s[segKey]; ticks[offset+i]= st||'n'; });
+  const filled=recent.length;
+  const up=recent.filter(d=>d.s&&d.s[segKey]==='ok').length;
+  const pct=filled?Math.round(up/filled*1000)/10:null;
+  const right=filled? (pct>=100?'100% uptime':pct+'% · '+filled+'d') : 'collecting history…';
+  return '<div class="uptime">'+ticks.map(t=>`<i class="${t==='ok'?'':t}"></i>`).join('')+'</div>'+
+    `<div class="uprow"><span>90 days ago</span><span>${right}</span><span>today</span></div>`;
+}
+
+function render(data){
+  const cur=data.current||{segments:[],overall:'idle'};
+  const byKey={}; (cur.segments||[]).forEach(s=>byKey[s.key]=s);
+  document.getElementById('segs').innerHTML=ORDER.map(k=>{
+    const s=byKey[k]||{state:'idle',detail:'…'}; const st=STATE[s.state]||STATE.idle;
+    return `<div class="seg ${st.c}"><div class="seg-top"><span class="dot"></span>
+      <div><div class="seg-name">${NAMES[k]||k}</div><div class="seg-detail">${s.detail||''}</div></div>
+      <span class="pill">${st.l}</span></div>${uptime(k,data.history||[])}</div>`;
+  }).join('');
+  const ov=cur.overall||'idle'; const st=STATE[ov]||STATE.idle;
+  document.getElementById('bigdot').className='bigdot '+st.c;
+  document.getElementById('headline').textContent= ov==='ok'?'All systems operational':ov==='down'?'Partial outage':ov==='warn'?'Some systems degraded':'Checking systems…';
+  document.getElementById('when').textContent='Last checked · '+new Date().toLocaleString();
+}
+
+fetch('/api/history',{cache:'no-store'}).then(r=>r.json()).then(render).catch(()=>{
+  document.getElementById('headline').textContent='Status temporarily unavailable';
+});
+</script>
+</body>
+</html>

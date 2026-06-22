@@ -1,0 +1,7 @@
+{
+  "name": "toke-status",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "status.mctoken.xyz — live ecosystem status for $TOKE (site, explorer, pipeline, API, liquidity)."
+}
