@@ -45,6 +45,11 @@ export async function runChecks() {
   const gating = (reliability && reliability.gating) || [];
   const pass = gating.filter(c => c.status === 'pass').length;
 
+  // oracle degraded-upstream guard (toke-api d741342): DexScreener omitting a registry pool ⇒ last-good served
+  const src = (oracle && (oracle.source || od.source)) || {};
+  const degraded = !!src.degraded;
+  const staleH = src.data_as_of ? (Date.now() - Date.parse(src.data_as_of)) / 36e5 : null;
+  const staleTxt = staleH == null || isNaN(staleH) ? '' : ` (~${staleH < 1 ? Math.round(staleH * 60) + 'm' : staleH.toFixed(1) + 'h'} old)`;
   const usd = n => n == null ? '—' : (n >= 1e6 ? '$' + (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? '$' + (n / 1e3).toFixed(1) + 'K' : '$' + Math.round(n));
   const lagTxt = lag == null ? '' : (lag < 1 ? `fresh · ~${Math.round(lag * 60)}m ago` : `fresh · ~${lag.toFixed(1)}h ago`);
 
@@ -53,7 +58,7 @@ export async function runChecks() {
     { key: 'explorer', name: 'Explorer', detail: exp.ok ? `reachable · ~${exp.ms}ms` : 'unreachable', state: exp.ok ? 'ok' : 'down' },
     { key: 'pipeline', name: 'Data pipeline', detail: reliability ? `Gate-A ${gA} · ${lagTxt}` : 'unreachable', state: !reliability ? 'down' : gA === 'GREEN' ? 'ok' : gA === 'RED' ? 'down' : 'warn' },
     { key: 'onchain', name: 'On-chain integrity', detail: reliability ? `${pass}/${gating.length} checks passing${reliability.flow_reconciled ? ' · flow reconciled' : ''}` : 'unreachable', state: !reliability ? 'down' : (pass === gating.length && gating.length > 0) ? 'ok' : 'warn' },
-    { key: 'api', name: 'TOKE API', detail: oracle ? `responding · ~${oracleMs}ms` : 'oracle unreachable', state: oracle ? 'ok' : 'warn' },
+    { key: 'api', name: 'TOKE API', detail: !oracle ? 'oracle unreachable' : degraded ? `responding · ~${oracleMs}ms · price feed degraded — serving last-good${staleTxt}` : `responding · ~${oracleMs}ms`, state: oracle && !degraded ? 'ok' : 'warn' },
     { key: 'liquidity', name: 'Liquidity', detail: liq != null ? `${usd(liq)} pooled${pools ? ` · ${pools} pools` : ''}` : 'unknown', state: liq > 0 ? 'ok' : oracle ? 'warn' : 'down' },
   ];
 
